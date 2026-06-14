@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dover Porchfest 2026</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --cream: #F0EDE4;
+      --black: #1A1A1A;
+      --teal: #4ABFBF;
+      --teal-dark: #339999;
+      --white: #FFFFFF;
+      --gray: #888;
+      --card-bg: #FFFFFF;
+      --border: #E0DDD4;
+    }
+
+    body {
+      background: var(--cream);
+      color: var(--black);
+      font-family: 'DM Sans', sans-serif;
+      min-height: 100vh;
+    }
+
+    /* HEADER */
+    header {
+      background: var(--black);
+      color: var(--cream);
+      padding: 2rem 1.5rem 1.5rem;
+      text-align: center;
+      position: relative;
+    }
+    header .eyebrow {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.75rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--teal);
+      margin-bottom: 0.5rem;
+    }
+    header h1 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(3rem, 10vw, 5.5rem);
+      line-height: 0.9;
+      letter-spacing: 0.02em;
+    }
+    header h1 span {
+      color: var(--teal);
+    }
+    header .meta {
+      margin-top: 0.75rem;
+      font-size: 0.85rem;
+      color: #aaa;
+      font-family: 'DM Mono', monospace;
+    }
+
+    /* NOW PLAYING BANNER */
+    #now-banner {
+      background: var(--teal);
+      color: var(--black);
+      padding: 0.6rem 1.5rem;
+      text-align: center;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.8rem;
+      font-weight: 500;
+      letter-spacing: 0.05em;
+      display: none;
+    }
+    #now-banner.visible { display: block; }
+    #now-banner .pulse {
+      display: inline-block;
+      width: 8px; height: 8px;
+      background: var(--black);
+      border-radius: 50%;
+      margin-right: 6px;
+      animation: pulse 1.5s infinite;
+      vertical-align: middle;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.7); }
+    }
+
+    /* CONTROLS */
+    .controls {
+      padding: 1.25rem 1.5rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      background: var(--cream);
+      z-index: 10;
+    }
+    .controls-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--gray);
+      margin-right: 0.25rem;
+    }
+    .filter-btn {
+      padding: 0.35rem 0.85rem;
+      border: 1.5px solid var(--black);
+      border-radius: 2px;
+      background: transparent;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+      color: var(--black);
+    }
+    .filter-btn:hover { background: var(--black); color: var(--cream); }
+    .filter-btn.active { background: var(--black); color: var(--cream); }
+    .filter-btn.now-btn {
+      border-color: var(--teal);
+      color: var(--teal);
+      margin-left: auto;
+    }
+    .filter-btn.now-btn:hover, .filter-btn.now-btn.active {
+      background: var(--teal);
+      color: var(--black);
+      border-color: var(--teal);
+    }
+
+    /* GRID */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1px;
+      background: var(--border);
+      border-top: 1px solid var(--border);
+    }
+
+    /* CARD */
+    .card {
+      background: var(--card-bg);
+      padding: 1.25rem 1.5rem;
+      transition: background 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0;
+      width: 3px;
+      height: 100%;
+      background: var(--teal);
+      transform: scaleY(0);
+      transition: transform 0.2s;
+      transform-origin: bottom;
+    }
+    .card:hover::before { transform: scaleY(1); }
+    .card:hover { background: #FAFAF7; }
+    .card.hidden { display: none; }
+    .card.now-playing { background: #F0FBF9; }
+    .card.now-playing::before { transform: scaleY(1); }
+
+    .card-address {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.4rem;
+      letter-spacing: 0.03em;
+      line-height: 1;
+      margin-bottom: 0.15rem;
+    }
+    .card-map-link {
+      color: var(--teal-dark);
+      text-decoration: none;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.68rem;
+      letter-spacing: 0.05em;
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      margin-bottom: 1rem;
+      border-bottom: 1px solid transparent;
+      transition: border-color 0.15s;
+    }
+    .card-map-link:hover { border-color: var(--teal-dark); }
+
+    .slot {
+      display: flex;
+      align-items: baseline;
+      gap: 0.6rem;
+      padding: 0.45rem 0;
+      border-top: 1px solid var(--border);
+    }
+    .slot:first-of-type { border-top: none; }
+    .slot-time {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.7rem;
+      font-weight: 500;
+      color: var(--gray);
+      min-width: 42px;
+      flex-shrink: 0;
+    }
+    .slot-band {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--black);
+    }
+    .slot.playing .slot-time { color: var(--teal-dark); }
+    .slot.playing .slot-band { color: var(--teal-dark); }
+    .slot.playing::after {
+      content: '▶';
+      font-size: 0.5rem;
+      color: var(--teal);
+      margin-left: auto;
+      align-self: center;
+    }
+
+    /* NOW PLAYING TAG */
+    .now-tag {
+      display: none;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.6rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: var(--teal);
+      color: var(--black);
+      padding: 2px 6px;
+      border-radius: 2px;
+      position: absolute;
+      top: 1.25rem;
+      right: 1.25rem;
+    }
+    .card.now-playing .now-tag { display: block; }
+
+    /* MAP SECTION */
+    .map-section {
+      background: var(--black);
+      padding: 2rem 1.5rem;
+    }
+    .map-section h2 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.8rem;
+      color: var(--cream);
+      letter-spacing: 0.05em;
+      margin-bottom: 1rem;
+    }
+    .map-embed {
+      width: 100%;
+      height: 420px;
+      border: none;
+      border-radius: 2px;
+    }
+
+    /* FOOTER */
+    footer {
+      background: var(--black);
+      color: #666;
+      text-align: center;
+      padding: 1.5rem;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.72rem;
+      border-top: 1px solid #333;
+    }
+    footer a { color: var(--teal); text-decoration: none; }
+
+    /* NO RESULTS */
+    .no-results {
+      display: none;
+      grid-column: 1/-1;
+      padding: 3rem;
+      text-align: center;
+      font-family: 'DM Mono', monospace;
+      color: var(--gray);
+      font-size: 0.85rem;
+      background: var(--card-bg);
+    }
+    .no-results.visible { display: block; }
+
+    @media (max-width: 500px) {
+      .controls { gap: 0.4rem; }
+      .filter-btn.now-btn { margin-left: 0; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="eyebrow">Dover, NH &mdash; June 14, 2026 &mdash; 1pm–5pm &mdash; Free</div>
+  <h1>DOVER<br/><span>PORCH</span>FEST</h1>
+  <div class="meta">11 porches &nbsp;·&nbsp; 22 acts &nbsp;·&nbsp; All free, all ages</div>
+</header>
+
+<div id="now-banner">
+  <span class="pulse"></span>
+  <span id="now-text">Music is happening right now!</span>
+</div>
+
+<div class="controls">
+  <span class="controls-label">Filter</span>
+  <button class="filter-btn active" data-filter="all">All</button>
+  <button class="filter-btn" data-filter="1:00 PM">1pm</button>
+  <button class="filter-btn" data-filter="2:00 PM">2pm</button>
+  <button class="filter-btn" data-filter="2:30 PM">2:30pm</button>
+  <button class="filter-btn" data-filter="3:30 PM">3:30pm</button>
+  <button class="filter-btn" data-filter="3:45 PM">3:45pm</button>
+  <button class="filter-btn now-btn" data-filter="now">▶ Playing Now</button>
+</div>
+
+<div class="grid" id="grid">
+  <div class="no-results" id="no-results">No performances match this filter right now.</div>
+</div>
+
+<div class="map-section">
+  <h2>Find the Porches</h2>
+  <iframe
+    class="map-embed"
+    src="https://www.google.com/maps/d/embed?mid=1BXkWU8e5qS8Qgh5LZNG5e2XFpEfHMRo&ehbc=2E312F"
+    allowfullscreen
+    loading="lazy"
+    title="Dover Porchfest Map">
+  </iframe>
+  <p style="color:#666;font-size:0.75rem;font-family:'DM Mono',monospace;margin-top:0.75rem;">
+    Can't see the map? <a href="https://maps.app.goo.gl/doverpochfest" target="_blank" style="color:var(--teal)">Open in Google Maps →</a>
+  </p>
+</div>
+
+<footer>
+  Dover Porchfest 2026 &nbsp;·&nbsp; <a href="https://www.porchfestdover.com" target="_blank">porchfestdover.com</a>
+</footer>
+
+<script>
+  const VENUES = [
+    {
+      address: "28 Tuttle Ln",
+      lat: 43.1674732, lng: -70.8440143,
+      slots: [
+        { time: "1:00 PM", band: "The Form Band" },
+        { time: "3:30 PM", band: "3 ALARM" }
+      ]
+    },
+    {
+      address: "34 Quaker Ln",
+      lat: 43.1696443, lng: -70.8444403,
+      slots: [
+        { time: "1:00 PM", band: "Foggy Dew" },
+        { time: "2:30 PM", band: "RGP Duo" },
+        { time: "3:30 PM", band: "Bussekin Dukes" }
+      ]
+    },
+    {
+      address: "52 Overlook Dr",
+      lat: 43.1703747, lng: -70.8465247,
+      slots: [
+        { time: "1:00 PM", band: "Anthony Vito Fiandaca" },
+        { time: "3:30 PM", band: "Drifter's Debt" }
+      ]
+    },
+    {
+      address: "73 4th St",
+      lat: 43.2001287, lng: -70.8833138,
+      slots: [
+        { time: "1:00 PM", band: "Peregrine Dream" },
+        { time: "3:30 PM", band: "Echoed Chamber" }
+      ]
+    },
+    {
+      address: "7 Snows Ct",
+      lat: 43.1992821, lng: -70.8828474,
+      slots: [
+        { time: "1:00 PM", band: "Miss Chiff" },
+        { time: "2:00 PM", band: "Tin Palace" },
+        { time: "3:30 PM", band: "The Scraps" }
+      ]
+    },
+    {
+      address: "16 Prospect St",
+      lat: 43.1962703, lng: -70.8866543,
+      slots: [
+        { time: "1:00 PM", band: "Hempcats" },
+        { time: "2:30 PM", band: "Noise on Neptune" },
+        { time: "3:30 PM", band: "Bad Breath Mic" }
+      ]
+    },
+    {
+      address: "311 Washington St",
+      lat: 43.1957004, lng: -70.8877953,
+      slots: [
+        { time: "1:00 PM", band: "Jon Giegengack" },
+        { time: "3:30 PM", band: "Mark and Martha" }
+      ]
+    },
+    {
+      address: "Chapel + Main (83 Main St)",
+      lat: 43.1980611, lng: -70.8724979,
+      slots: [
+        { time: "2:00 PM", band: "JAB" },
+        { time: "3:45 PM", band: "The Blue Buddha Band" }
+      ]
+    },
+    {
+      address: "142a Broadway",
+      lat: 43.2075991, lng: -70.8672314,
+      slots: [
+        { time: "1:00 PM", band: "Jiggery Pokery" },
+        { time: "3:30 PM", band: "Acoustically Speaking" }
+      ]
+    },
+    {
+      address: "89 Horne St",
+      lat: 43.2129346, lng: -70.881482,
+      slots: [
+        { time: "1:00 PM", band: "Vices Inc" },
+        { time: "3:30 PM", band: "25% Vegan" }
+      ]
+    },
+    {
+      address: "21 Kirkland St",
+      lat: 43.1925583, lng: -70.8749375,
+      slots: [
+        { time: "1:00 PM", band: "Morrison" },
+        { time: "3:30 PM", band: "Empty Array" }
+      ]
+    }
+  ];
+
+  // Parse time string to today's Date
+  function parseTime(str) {
+    const [time, period] = str.split(' ');
+    let [h, m] = time.split(':').map(Number);
+    if (period === 'PM' && h !== 12) h += 12;
+    const d = new Date();
+    d.setHours(h, m, 0, 0);
+    return d;
+  }
+
+  // Which slot is currently playing at a venue (sets run ~1.5 hrs or until next)
+  function getPlayingSlots(venue) {
+    const now = new Date();
+    const slots = venue.slots;
+    return slots.filter((slot, i) => {
+      const start = parseTime(slot.time);
+      const end = i < slots.length - 1
+        ? parseTime(slots[i + 1].time)
+        : new Date(parseTime(slots[slots.length - 1].time).getTime() + 90 * 60000);
+      return now >= start && now < end;
+    });
+  }
+
+  function isVenueActive(venue) {
+    return getPlayingSlots(venue).length > 0;
+  }
+
+  function isFestivalActive() {
+    const now = new Date();
+    const start = parseTime("1:00 PM");
+    const end = parseTime("5:00 PM");
+    return now >= start && now < end;
+  }
+
+  let currentFilter = 'all';
+
+  function buildCards() {
+    const grid = document.getElementById('grid');
+    const noResults = document.getElementById('no-results');
+    grid.innerHTML = '';
+    grid.appendChild(noResults);
+
+    VENUES.forEach((venue, i) => {
+      const playingSlots = getPlayingSlots(venue);
+      const isNow = playingSlots.length > 0;
+
+      const card = document.createElement('div');
+      card.className = 'card' + (isNow ? ' now-playing' : '');
+      card.dataset.venue = i;
+
+      const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(venue.address + ', Dover, NH')}`;
+
+      card.innerHTML = `
+        <span class="now-tag">Now Playing</span>
+        <div class="card-address">${venue.address}</div>
+        <a class="card-map-link" href="${mapsUrl}" target="_blank">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          Get directions
+        </a>
+        ${venue.slots.map(slot => {
+          const playing = playingSlots.some(s => s.time === slot.time);
+          return `<div class="slot${playing ? ' playing' : ''}" data-time="${slot.time}">
+            <span class="slot-time">${slot.time.replace(':00', '').replace(' ', '')}</span>
+            <span class="slot-band">${slot.band}</span>
+          </div>`;
+        }).join('')}
+      `;
+
+      grid.appendChild(card);
+    });
+
+    applyFilter(currentFilter, false);
+  }
+
+  function applyFilter(filter, updateBtn = true) {
+    currentFilter = filter;
+    const cards = document.querySelectorAll('.card');
+    let visible = 0;
+
+    cards.forEach(card => {
+      if (card.id === 'no-results') return;
+      const idx = card.dataset.venue;
+      const venue = VENUES[idx];
+
+      let show = false;
+      if (filter === 'all') {
+        show = true;
+      } else if (filter === 'now') {
+        show = isVenueActive(venue);
+      } else {
+        show = venue.slots.some(s => s.time === filter);
+      }
+
+      card.classList.toggle('hidden', !show);
+      if (show) visible++;
+    });
+
+    document.getElementById('no-results').classList.toggle('visible', visible === 0);
+
+    if (updateBtn) {
+      document.querySelectorAll('.filter-btn').forEach(b => {
+        b.classList.toggle('active', b.dataset.filter === filter);
+      });
+    }
+  }
+
+  function updateNowBanner() {
+    const banner = document.getElementById('now-banner');
+    const nowText = document.getElementById('now-text');
+
+    if (!isFestivalActive()) {
+      const now = new Date();
+      const start = parseTime("1:00 PM");
+      if (now < start) {
+        banner.classList.add('visible');
+        nowText.textContent = '🎵 Music starts at 1pm today — see you there!';
+      } else {
+        banner.classList.remove('visible');
+      }
+      return;
+    }
+
+    const active = VENUES.filter(v => isVenueActive(v));
+    if (active.length > 0) {
+      const playing = active.flatMap(v => getPlayingSlots(v).map(s => s.band));
+      banner.classList.add('visible');
+      nowText.textContent = `Playing now: ${playing.slice(0, 3).join(', ')}${playing.length > 3 ? ` + ${playing.length - 3} more` : ''}`;
+    } else {
+      banner.classList.remove('visible');
+    }
+  }
+
+  // Wire up filter buttons
+  document.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      applyFilter(btn.dataset.filter);
+    });
+  });
+
+  // Init
+  buildCards();
+  updateNowBanner();
+
+  // Refresh every minute
+  setInterval(() => {
+    buildCards();
+    updateNowBanner();
+  }, 60000);
+</script>
+</body>
+</html>
